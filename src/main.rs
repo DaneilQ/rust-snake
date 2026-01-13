@@ -73,7 +73,7 @@ impl Items {
 
 }
 
-struct Position {
+struct Character {
     pub current_index : i32,
     future_index: i32,
     number_of_squares_per_row : i32,
@@ -83,7 +83,7 @@ struct Position {
     tail_length: i32
 }
 
-impl Position {
+impl Character {
 
     pub fn init(number_of_squares_per_row: i32) -> Self {
         Self {
@@ -188,7 +188,7 @@ fn main() {
 
     let canvas = Rectangle::new(rl.get_screen_width() as f32 / 4.0, rl.get_screen_height() as f32 / 8.0, rl.get_screen_width() as f32 / 2.0,  rl.get_screen_width() as f32 / 2.0);
 
-    let mut position = Position::init(INITIAL_SQUARES_PER_ROW);
+    let mut position = Character::init(INITIAL_SQUARES_PER_ROW);
     let mut items = Items::init(position.number_of_squares_per_row * position.number_of_squares_per_row);
     let unit_size = canvas.width as i32 / position.number_of_squares_per_row;
 
@@ -221,11 +221,13 @@ fn main() {
 
         let mut d = rl.begin_drawing(&thread);
 
-        d.clear_background(Color::BLACK);
+        d.clear_background(Color::new(123, 66, 145, 255));
 
         let mut squares: Vec<i32> = Vec::new();
 
         squares.resize((position.number_of_squares_per_row * position.number_of_squares_per_row) as usize, unit_size);
+
+        d.draw_rectangle(canvas.x as i32, canvas.y as i32, canvas.width as i32, canvas.height as i32, Color::new(116, 51, 121, 255));
 
         for (i, _num) in squares.into_iter().enumerate() {
             if i % position.number_of_squares_per_row as usize == 0 && i >= position.number_of_squares_per_row as usize {
@@ -233,16 +235,14 @@ fn main() {
                 starts_at_y += unit_size;
             }
             if i == position.current_index as usize {
-                d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::BEIGE);
+                d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(42,148,150,255));
             } else if i == items.coin_position as usize {
-                d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::GREEN);
-            } else {
-                d.draw_rectangle_lines(starts_at_x, starts_at_y, unit_size, unit_size, Color::BEIGE);
+                d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(244,215,112,255));
             }
 
             for tail in position.tail_positions.as_slice() {
                 if *tail == i as i32 {
-                    d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::DARKGRAY);
+                    d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(42,148,150,120));
                 }
             }
 
