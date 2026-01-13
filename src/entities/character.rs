@@ -1,3 +1,5 @@
+
+#[derive(PartialEq, Eq)]
 pub enum Direction {
     Up,
     Left,
@@ -46,28 +48,37 @@ impl Character {
         self.current_index = self.future_index;
     }
 
-    pub fn set_direction(&mut self, new_dir: Direction) {
-        self.last_position_direction = new_dir;
-    }
-
     pub fn add_tail_length(&mut self) {
         self.tail_length+=1;
     }
 
     pub fn update(&mut self, delta: f32) {
         self.timer+= delta;
-        if self.timer > 0.1 {
+        if self.timer > 0.5 {
             self.timer = 0.0;
-            self.tail_positions.insert(0,self.current_index);
-            let end = self.tail_length as usize;
-            let end = end.min(self.tail_positions.len());
-            let new_vector = self.tail_positions[0..end].to_vec();
-            self.tail_positions = new_vector;
+            self.update_tail_positions();
             self.set_future_index();
             self.set_current_index();
         }
     }
 
+    fn update_tail_positions(&mut self) {
+        self.tail_positions.insert(0,self.current_index);
+        let end = self.tail_length as usize;
+        let end = end.min(self.tail_positions.len());
+        let new_vector = self.tail_positions[0..end].to_vec();
+        self.tail_positions = new_vector;
+    }
+    pub fn move_to(&mut self, direction: Direction) {
+        if direction == self.last_position_direction {
+            return;
+        }
+        self.last_position_direction = direction;
+        self.update_tail_positions();
+        self.set_future_index();
+        self.set_current_index();
+        self.timer = 0.0;
+    }
     fn set_future_index(&mut self) {
         let total_squares = self.number_of_squares_per_row * self.number_of_squares_per_row;
         self.future_index = match self.last_position_direction {

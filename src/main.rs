@@ -34,15 +34,14 @@ fn main() {
             screen.resize(rl.get_screen_width(),rl.get_screen_height());
         }
 
-
         if rl.is_key_pressed(KeyboardKey::KEY_S) {
-            position.set_direction(Direction::Down);
+            position.move_to(Direction::Down);
         } else if rl.is_key_pressed(KeyboardKey::KEY_W) {
-            position.set_direction(Direction::Up);
+            position.move_to(Direction::Up);
         } else if rl.is_key_pressed(KeyboardKey::KEY_A) {
-            position.set_direction(Direction::Right);
+            position.move_to(Direction::Right);
         } else if rl.is_key_pressed(KeyboardKey::KEY_D) {
-            position.set_direction(Direction::Left);
+            position.move_to(Direction::Left);
         }
 
         if position.current_index == items.coin_position {
