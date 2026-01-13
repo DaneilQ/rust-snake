@@ -7,7 +7,6 @@ pub enum Direction {
     Right,
 }
 
-
 pub struct Character {
     pub current_index : i32,
     pub future_index: i32,
@@ -15,7 +14,8 @@ pub struct Character {
     pub last_position_direction: Direction,
     pub timer: f32,
     pub tail_positions: Vec<i32>,
-    pub tail_length: i32
+    pub tail_length: i32,
+    pub score: i32
 }
 
 impl Character {
@@ -29,6 +29,7 @@ impl Character {
             number_of_squares_per_row: number_of_squares_per_row,
             tail_positions: vec![],
             tail_length: 0,
+            score: 0,
         }
     }
 
@@ -39,6 +40,11 @@ impl Character {
         self.tail_length = 0;
         self.last_position_direction = Direction::Left;
         self.timer = 0.0;
+        self.score = 0;
+    }
+
+    pub fn add_score(&mut self) {
+        self.score += 1;
     }
 
     fn set_current_index (&mut self) {

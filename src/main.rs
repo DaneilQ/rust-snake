@@ -24,9 +24,9 @@ fn main() {
 
     let canvas = Rectangle::new(rl.get_screen_width() as f32 / 4.0, rl.get_screen_height() as f32 / 8.0, rl.get_screen_width() as f32 / 2.0,  rl.get_screen_width() as f32 / 2.0);
 
-    let mut position = Character::init(INITIAL_SQUARES_PER_ROW);
-    let mut items = Items::init(position.number_of_squares_per_row * position.number_of_squares_per_row);
-    let unit_size = canvas.width as i32 / position.number_of_squares_per_row;
+    let mut character = Character::init(INITIAL_SQUARES_PER_ROW);
+    let mut items = Items::init(character.number_of_squares_per_row * character.number_of_squares_per_row);
+    let unit_size = canvas.width as i32 / character.number_of_squares_per_row;
 
     while !rl.window_should_close() {
 
@@ -35,21 +35,22 @@ fn main() {
         }
 
         if rl.is_key_pressed(KeyboardKey::KEY_S) {
-            position.move_to(Direction::Down);
+            character.move_to(Direction::Down);
         } else if rl.is_key_pressed(KeyboardKey::KEY_W) {
-            position.move_to(Direction::Up);
+            character.move_to(Direction::Up);
         } else if rl.is_key_pressed(KeyboardKey::KEY_A) {
-            position.move_to(Direction::Right);
+            character.move_to(Direction::Right);
         } else if rl.is_key_pressed(KeyboardKey::KEY_D) {
-            position.move_to(Direction::Left);
+            character.move_to(Direction::Left);
         }
 
-        if position.current_index == items.coin_position {
-            position.add_tail_length();
-            items.spawn_coin(&position.tail_positions);
+        if character.current_index == items.coin_position {
+            character.add_tail_length();
+            character.add_score();
+            items.spawn_coin(&character.tail_positions);
         }
 
-        position.update(rl.get_frame_time());
+        character.update(rl.get_frame_time());
 
         let mut starts_at_x = canvas.x as i32;
         let mut starts_at_y = canvas.y as i32;
@@ -60,22 +61,25 @@ fn main() {
 
         let mut squares: Vec<i32> = Vec::new();
 
-        squares.resize((position.number_of_squares_per_row * position.number_of_squares_per_row) as usize, unit_size);
+
+        d.draw_text(&character.score.to_string(), 12, 12 , 50, Color::WHITE);
+
+        squares.resize((character.number_of_squares_per_row * character.number_of_squares_per_row) as usize, unit_size);
 
         d.draw_rectangle(canvas.x as i32, canvas.y as i32, canvas.width as i32, canvas.height as i32, Color::new(116, 51, 121, 255));
 
         for (i, _num) in squares.into_iter().enumerate() {
-            if i % position.number_of_squares_per_row as usize == 0 && i >= position.number_of_squares_per_row as usize {
+            if i % character.number_of_squares_per_row as usize == 0 && i >= character.number_of_squares_per_row as usize {
                 starts_at_x = canvas.x as i32;
                 starts_at_y += unit_size;
             }
-            if i == position.current_index as usize {
+            if i == character.current_index as usize {
                 d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(42,148,150,255));
             } else if i == items.coin_position as usize {
                 d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(244,215,112,255));
             }
 
-            for tail in position.tail_positions.as_slice() {
+            for tail in character.tail_positions.as_slice() {
                 if *tail == i as i32 {
                     d.draw_rectangle(starts_at_x, starts_at_y, unit_size, unit_size, Color::new(42,148,150,120));
                 }
