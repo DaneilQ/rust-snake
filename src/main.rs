@@ -8,6 +8,8 @@ const TARGET_FPS: u32 = 60;
 
 const WINDOW_TITLE :&str = "RUST SNAKE";
 
+const INITIAL_SQUARES_PER_ROW :i32 = 16;
+
 struct Screen {
     width: i32,
     height: i32,
@@ -49,8 +51,19 @@ impl Items {
             coin_position: Items::random(number_of_squares),
         }
     }
-    pub fn spawn_coin(&mut self) {
-        self.coin_position = Items::random(self.number_of_squares);
+    pub fn spawn_coin(&mut self, occupied_positions: &Vec<i32>) {
+        let all_positions: Vec<i32> = (0..self.number_of_squares).collect();
+        let filtered: Vec<i32> = all_positions
+            .into_iter()
+            .filter(|pos| !occupied_positions.contains(pos))
+            .collect();
+
+        if filtered.is_empty() {
+            self.coin_position = 0;
+        } else {
+            let random_index = Items::random(filtered.len() as i32);
+            self.coin_position = filtered[random_index as usize];
+        }
     }
 
     fn random(range: i32) -> i32 {
@@ -72,21 +85,31 @@ struct Position {
 
 impl Position {
 
-    pub fn init() -> Self {
+    pub fn init(number_of_squares_per_row: i32) -> Self {
         Self {
             current_index: 0,
             future_index: 1,
             last_position_direction: Direction::Left,
             timer: 0.0,
-            number_of_squares_per_row: 8,
+            number_of_squares_per_row: number_of_squares_per_row,
             tail_positions: vec![],
             tail_length: 0,
         }
     }
 
-
+    fn reset (&mut self) {
+        self.tail_positions.clear();
+        self.current_index = 0;
+        self.future_index = 1;
+        self.tail_length = 0;
+        self.last_position_direction = Direction::Left;
+        self.timer = 0.0;
+    }
 
     fn set_current_index (&mut self) {
+        if self.tail_positions.contains(&self.future_index) {
+            self.reset();
+        }
         self.current_index = self.future_index;
     }
 
@@ -100,10 +123,12 @@ impl Position {
 
     pub fn update(&mut self, delta: f32) {
         self.timer+= delta;
-        if self.timer > 0.3 {
+        if self.timer > 0.1 {
             self.timer = 0.0;
             self.tail_positions.insert(0,self.current_index);
-            let new_vector = self.tail_positions[0..self.tail_length as usize].to_vec();
+            let end = self.tail_length as usize;
+            let end = end.min(self.tail_positions.len());
+            let new_vector = self.tail_positions[0..end].to_vec();
             self.tail_positions = new_vector;
             self.set_future_index();
             self.set_current_index();
@@ -163,12 +188,9 @@ fn main() {
 
     let canvas = Rectangle::new(rl.get_screen_width() as f32 / 4.0, rl.get_screen_height() as f32 / 8.0, rl.get_screen_width() as f32 / 2.0,  rl.get_screen_width() as f32 / 2.0);
 
-    let number_of_squares_per_row = 8;
-    const MAX_NUMBER_OF_SQUARES : i32 = 64;
-    let unit_size = canvas.width as i32 / number_of_squares_per_row;
-
-    let mut position = Position::init();
-    let mut items = Items::init(MAX_NUMBER_OF_SQUARES);
+    let mut position = Position::init(INITIAL_SQUARES_PER_ROW);
+    let mut items = Items::init(position.number_of_squares_per_row * position.number_of_squares_per_row);
+    let unit_size = canvas.width as i32 / position.number_of_squares_per_row;
 
     while !rl.window_should_close() {
 
@@ -188,8 +210,8 @@ fn main() {
         }
 
         if position.current_index == items.coin_position {
-            items.spawn_coin();
             position.add_tail_length();
+            items.spawn_coin(&position.tail_positions);
         }
 
         position.update(rl.get_frame_time());
@@ -201,8 +223,12 @@ fn main() {
 
         d.clear_background(Color::BLACK);
 
-        for (i, _num) in [ unit_size ; MAX_NUMBER_OF_SQUARES as usize].into_iter().enumerate() {
-            if i % number_of_squares_per_row as usize == 0 && i >= number_of_squares_per_row as usize {
+        let mut squares: Vec<i32> = Vec::new();
+
+        squares.resize((position.number_of_squares_per_row * position.number_of_squares_per_row) as usize, unit_size);
+
+        for (i, _num) in squares.into_iter().enumerate() {
+            if i % position.number_of_squares_per_row as usize == 0 && i >= position.number_of_squares_per_row as usize {
                 starts_at_x = canvas.x as i32;
                 starts_at_y += unit_size;
             }
