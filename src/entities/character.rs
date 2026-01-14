@@ -1,4 +1,3 @@
-
 #[derive(PartialEq, Eq)]
 pub enum Direction {
     Up,
@@ -8,18 +7,17 @@ pub enum Direction {
 }
 
 pub struct Character {
-    pub current_index : i32,
+    pub current_index: i32,
     pub future_index: i32,
-    pub number_of_squares_per_row : i32,
+    pub number_of_squares_per_row: i32,
     pub last_position_direction: Direction,
     pub timer: f32,
     pub tail_positions: Vec<i32>,
     pub tail_length: i32,
-    pub score: i32
+    pub score: i32,
 }
 
 impl Character {
-
     pub fn init(number_of_squares_per_row: i32) -> Self {
         Self {
             current_index: 0,
@@ -33,7 +31,7 @@ impl Character {
         }
     }
 
-    fn reset (&mut self) {
+    fn reset(&mut self) {
         self.tail_positions.clear();
         self.current_index = 0;
         self.future_index = 1;
@@ -47,7 +45,7 @@ impl Character {
         self.score += 1;
     }
 
-    fn set_current_index (&mut self) {
+    fn set_current_index(&mut self) {
         if self.tail_positions.contains(&self.future_index) {
             self.reset();
         }
@@ -55,11 +53,11 @@ impl Character {
     }
 
     pub fn add_tail_length(&mut self) {
-        self.tail_length+=1;
+        self.tail_length += 1;
     }
 
     pub fn update(&mut self, delta: f32) {
-        self.timer+= delta;
+        self.timer += delta;
         if self.timer > 0.5 {
             self.timer = 0.0;
             self.update_tail_positions();
@@ -69,16 +67,55 @@ impl Character {
     }
 
     fn update_tail_positions(&mut self) {
-        self.tail_positions.insert(0,self.current_index);
+        self.tail_positions.insert(0, self.current_index);
         let end = self.tail_length as usize;
         let end = end.min(self.tail_positions.len());
         let new_vector = self.tail_positions[0..end].to_vec();
         self.tail_positions = new_vector;
     }
+
+    fn check_if_oposite_direction(&self, new_position: &Direction) -> bool {
+        match new_position {
+            Direction::Up => {
+                if self.last_position_direction == Direction::Down {
+                    false
+                } else {
+                    true
+                }
+            }
+            Direction::Down => {
+                if self.last_position_direction == Direction::Up {
+                    false
+                } else {
+                    true
+                }
+            }
+            Direction::Left => {
+                if self.last_position_direction == Direction::Right {
+                    false
+                } else {
+                    true
+                }
+            }
+            Direction::Right => {
+                if self.last_position_direction == Direction::Left {
+                    false
+                } else {
+                    true
+                }
+            }
+        }
+    }
+
     pub fn move_to(&mut self, direction: Direction) {
         if direction == self.last_position_direction {
             return;
         }
+
+        if !self.check_if_oposite_direction(&direction) {
+            return;
+        }
+
         self.last_position_direction = direction;
         self.update_tail_positions();
         self.set_future_index();
